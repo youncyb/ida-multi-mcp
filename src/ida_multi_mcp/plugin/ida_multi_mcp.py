@@ -178,6 +178,14 @@ class IdaMultiMcpPlugin(idaapi.plugin_t):
                     daemon=True,
                 )
                 self.heartbeat_thread.start()
+
+                # One host-wide Streamable HTTP aggregator for remote clients.
+                # Multiple IDA processes must not each bind :8745.
+                threading.Thread(
+                    target=self._ensure_http_aggregator,
+                    daemon=True,
+                    name="ida-mcp-http",
+                ).start()
             else:
                 print("[ida-multi-mcp] Failed to get server port")
 
@@ -188,6 +196,30 @@ class IdaMultiMcpPlugin(idaapi.plugin_t):
                 print(f"[ida-multi-mcp] Failed to start server: {e}")
                 import traceback
                 traceback.print_exc()
+
+    def _ensure_http_aggregator(self):
+        """Spawn at most one --http aggregator for this host (IDA-GUI only)."""
+        try:
+            from ida_multi_mcp.http_aggregator import ensure_http_aggregator
+
+            result = ensure_http_aggregator()
+        except Exception as exc:
+            print(f"[ida-multi-mcp] HTTP aggregator ensure failed: {exc}")
+            return
+        url = result.url or f"http://{result.host}:{result.port}/mcp"
+        if result.action == "disabled":
+            print("[ida-multi-mcp] HTTP aggregator auto-start disabled (IDA_MCP_HTTP=0)")
+        elif result.action == "already_running":
+            print(f"[ida-multi-mcp] HTTP aggregator already listening at {url}")
+        elif result.action == "started":
+            print(
+                f"[ida-multi-mcp] HTTP aggregator started (pid={result.pid}) at {url}"
+            )
+        else:
+            print(
+                f"[ida-multi-mcp] HTTP aggregator {result.action}"
+                + (f": {result.error}" if result.error else "")
+            )
 
     def _heartbeat_loop(self):
         """Send periodic heartbeats to the central registry (every 60s)."""

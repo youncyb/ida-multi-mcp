@@ -37,7 +37,7 @@
 > @Web fetch https://raw.githubusercontent.com/youncyb/ida-multi-mcp/main/docs/installation.md and follow the installation steps.
 
 Then open your binaries in IDA Pro — instances register themselves — and talk to your agent.
-OpenCode on the host and IDA in a VM: install this package **in the VM**, run `ida-multi-mcp --http --host 0.0.0.0 --port 8745`, and point OpenCode at `http://<VM-IP>:8745/mcp` (`type: remote`, `oauth: false`). Details: [Host OpenCode + IDA in a VM](docs/installation.md#host-opencode--ida-in-a-vm).
+OpenCode on the host and IDA in a VM: install this package **in the VM**, open a database in IDA (the plugin starts one HTTP aggregator), and point OpenCode at `http://<VM-IP>:8745/mcp` (`type: remote`, `oauth: false`). Details: [Host OpenCode + IDA in a VM](docs/installation.md#host-opencode--ida-in-a-vm).
 Prefer doing it by hand? See [Manual installation](#manual-installation). Removing it again is in [Troubleshooting](docs/troubleshooting.md#uninstallation).
 
 ---

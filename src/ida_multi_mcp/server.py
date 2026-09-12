@@ -1042,7 +1042,16 @@ class IdaMultiMcpServer:
             )
             # Bind on this thread, serve in a background thread so Ctrl+C can
             # call stop() from the main thread (HTTPServer.shutdown requirement).
-            self.server.serve(http_host, port, background=True)
+            try:
+                self.server.serve(http_host, port, background=True)
+            except OSError as exc:
+                if _is_addr_in_use(exc):
+                    print(
+                        f"[ida-multi-mcp] HTTP MCP already listening on {http_host}:{port}, exiting",
+                        file=sys.stderr,
+                    )
+                    return
+                raise
             try:
                 while self.server._running:
                     time.sleep(0.5)
@@ -1059,6 +1068,16 @@ HTTP_DEFAULT_HOST = "127.0.0.1"
 HTTP_DEFAULT_PORT = 8745
 _LOOPBACK_BINDS = frozenset({"127.0.0.1", "localhost", "::1"})
 _WILDCARD_BINDS = frozenset({"0.0.0.0", "::", ""})
+
+
+def _is_addr_in_use(exc: OSError) -> bool:
+    import errno
+
+    if exc.errno == errno.EADDRINUSE:
+        return True
+    if getattr(exc, "winerror", None) == 10048:
+        return True
+    return False
 
 
 def configure_http_host_policy(

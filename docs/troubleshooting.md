@@ -15,7 +15,7 @@ Make sure:
 3. Check IDA console for error messages
 4. Run `ida-multi-mcp --list` again
 
-If OpenCode is on the host and IDA is in a VM, a host-side stdio config (`python -m ida_multi_mcp`) reads the **host** registry, which is empty. Run the aggregator in the VM with `--http` and point OpenCode at `http://<VM-IP>:<port>/mcp`. See [Host OpenCode + IDA in a VM](installation.md#host-opencode--ida-in-a-vm).
+If OpenCode is on the host and IDA is in a VM, a host-side stdio config (`python -m ida_multi_mcp`) reads the **host** registry, which is empty. Open a database in IDA on the VM — the plugin starts one HTTP aggregator — and point OpenCode at `http://<VM-IP>:8745/mcp`. See [Host OpenCode + IDA in a VM](installation.md#host-opencode--ida-in-a-vm).
 
 </details>
 

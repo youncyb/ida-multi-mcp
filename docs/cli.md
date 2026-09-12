@@ -27,6 +27,8 @@ ida-multi-mcp --config --http --host 192.168.239.10 --port 8745
 
 `--host` / `--port` / `--allowed-host` require `--http`. `--allowed-host` is repeatable and is only needed for DNS names in the `Host` header; IP-literal hosts are accepted automatically on a non-loopback bind.
 
+The IDA GUI plugin auto-starts this HTTP aggregator when a database opens (one process per host; extra instances skip if the port is already listening). Set `IDA_MCP_HTTP=0` to disable. A second `--http` process on the same port exits instead of binding twice.
+
 OpenCode on the client machine:
 
 ```jsonc

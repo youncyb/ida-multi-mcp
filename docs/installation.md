@@ -188,13 +188,17 @@ ida-multi-mcp --config
 
 Keep the plugin and aggregator in the VM. Expose only the aggregator over Streamable HTTP; IDA instance HTTP stays on `127.0.0.1`.
 
-**On the VM** (after plugin install):
+**On the VM** (after plugin install): open a database in IDA. The first GUI instance starts one host-wide aggregator (`0.0.0.0:8745` by default). Later IDA windows reuse it; they do not bind the port again. You do not need to run `ida-multi-mcp --http` by hand.
 
-```bash
-ida-multi-mcp --http --host 0.0.0.0 --port 8745
+Optional overrides (IDA's environment, then restart IDA):
+
+```text
+IDA_MCP_HTTP=0              # disable auto-start
+IDA_MCP_HTTP_HOST=0.0.0.0   # default
+IDA_MCP_HTTP_PORT=8745      # default
 ```
 
-Allow inbound TCP 8745 on the VM firewall if needed. Use a host-only or LAN adapter, not a public bind.
+Allow inbound TCP 8745 on the VM firewall if needed. Use a host-only or LAN adapter, not a public bind. Manual start is still valid: `ida-multi-mcp --http --host 0.0.0.0 --port 8745` (a second process exits if the port is already taken).
 
 **On the host**, OpenCode V2 (`opencode.json` / `opencode.jsonc`):
 
