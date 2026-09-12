@@ -31,12 +31,13 @@
 **Ask your AI agent to install it.** Copy-paste one of these — it matches IDA's Python version, drops the plugin in place, and registers the MCP server with your client.
 
 **Claude Code / Codex:**
-> Install and configure ida-multi-mcp by following the instructions here: https://raw.githubusercontent.com/MeroZemory/ida-multi-mcp/main/docs/installation.md
+> Install and configure ida-multi-mcp by following the instructions here: https://raw.githubusercontent.com/youncyb/ida-multi-mcp/main/docs/installation.md
 
 **Cursor:**
-> @Web fetch https://raw.githubusercontent.com/MeroZemory/ida-multi-mcp/main/docs/installation.md and follow the installation steps.
+> @Web fetch https://raw.githubusercontent.com/youncyb/ida-multi-mcp/main/docs/installation.md and follow the installation steps.
 
 Then open your binaries in IDA Pro — instances register themselves — and talk to your agent.
+OpenCode on the host and IDA in a VM: install this package **in the VM**, run `ida-multi-mcp --http --host 0.0.0.0 --port 8745`, and point OpenCode at `http://<VM-IP>:8745/mcp` (`type: remote`, `oauth: false`). Details: [Host OpenCode + IDA in a VM](docs/installation.md#host-opencode--ida-in-a-vm).
 Prefer doing it by hand? See [Manual installation](#manual-installation). Removing it again is in [Troubleshooting](docs/troubleshooting.md#uninstallation).
 
 ---
@@ -262,7 +263,7 @@ ida-multi-mcp --uninstall
 python -m pip uninstall -y ida-multi-mcp
 
 # 1. Install ida-multi-mcp
-python -m pip install git+https://github.com/MeroZemory/ida-multi-mcp.git
+python -m pip install git+https://github.com/youncyb/ida-multi-mcp.git
 
 # 2. Install IDA plugin + configure all MCP clients
 ida-multi-mcp --install
@@ -286,10 +287,10 @@ Python> import sys; print(sys.version)
 **Step 2 — install** (replace `3.11` with IDA's version):
 ```bash
 # 1. CLI tool via pipx (for terminal commands)
-pipx install git+https://github.com/MeroZemory/ida-multi-mcp.git
+pipx install git+https://github.com/youncyb/ida-multi-mcp.git
 
 # 2. Package for IDA's Python
-python3.11 -m pip install --user git+https://github.com/MeroZemory/ida-multi-mcp.git
+python3.11 -m pip install --user git+https://github.com/youncyb/ida-multi-mcp.git
 
 # 3. IDA plugin + MCP client configuration
 ida-multi-mcp --install
@@ -307,7 +308,7 @@ claude mcp add ida-multi-mcp -s user -- ida-multi-mcp
 
 ```bash
 # 1. Install ida-multi-mcp
-pip install --user git+https://github.com/MeroZemory/ida-multi-mcp.git
+pip install --user git+https://github.com/youncyb/ida-multi-mcp.git
 
 # 2. Install IDA plugin + configure MCP clients
 ida-multi-mcp --install
@@ -315,11 +316,11 @@ ida-multi-mcp --install
 
 </details>
 
-The canonical guide an AI agent should follow is [`docs/installation.md`](https://raw.githubusercontent.com/MeroZemory/ida-multi-mcp/main/docs/installation.md) — platform packages, IDA Python matching, plugin setup, verification.
+The canonical guide an AI agent should follow is [`docs/installation.md`](https://raw.githubusercontent.com/youncyb/ida-multi-mcp/main/docs/installation.md) — platform packages, IDA Python matching, plugin setup, verification, remote OpenCode.
 
 ### Supported MCP clients
 
-Works with stdio-capable MCP clients. `ida-multi-mcp --install` configures every supported client it finds on your machine:
+Works with stdio MCP clients, and with Streamable HTTP (`--http`) for a remote client such as OpenCode on another machine. `ida-multi-mcp --install` writes **stdio** configs for every supported client it finds; for host/VM, configure `type: remote` on the host instead (see [installation](docs/installation.md#host-opencode--ida-in-a-vm)).
 
 - **CLI** — Claude Code, Codex, Gemini CLI, Copilot CLI, Amazon Q Developer CLI, Qwen Coder, Opencode, Crush, Factory Droid
 - **IDE** — Cursor, VS Code (Copilot), Windsurf, Zed, Kiro, Trae, Antigravity, Augment Code

@@ -86,7 +86,7 @@ If command is unavailable, continue with install.
 
 ```bash
 # 1. Install CLI tool via pipx (runs ida-multi-mcp serve, list, install, etc.)
-pipx install git+https://github.com/MeroZemory/ida-multi-mcp.git
+pipx install git+https://github.com/youncyb/ida-multi-mcp.git
 
 # 2. Find which Python version IDA uses (check IDA console or run):
 #    Python> import sys; print(sys.version)
@@ -94,7 +94,7 @@ pipx install git+https://github.com/MeroZemory/ida-multi-mcp.git
 
 # 3. Install package for IDA's Python version
 #    Replace "python3.11" with IDA's actual Python version
-python3.11 -m pip install --user git+https://github.com/MeroZemory/ida-multi-mcp.git
+python3.11 -m pip install --user git+https://github.com/youncyb/ida-multi-mcp.git
 
 # 4. Install IDA plugin + configure all MCP clients
 ida-multi-mcp --install
@@ -104,7 +104,7 @@ ida-multi-mcp --install
 
 ```bash
 # 1. Install using IDA's Python version directly
-python3.11 -m pip install --user --break-system-packages git+https://github.com/MeroZemory/ida-multi-mcp.git
+python3.11 -m pip install --user --break-system-packages git+https://github.com/youncyb/ida-multi-mcp.git
 
 # 2. Install IDA plugin + configure all MCP clients
 python3.11 -m ida_multi_mcp --install
@@ -126,7 +126,7 @@ ida-multi-mcp --uninstall
 python -m pip uninstall -y ida-multi-mcp
 
 # 1. Install ida-multi-mcp
-python -m pip install git+https://github.com/MeroZemory/ida-multi-mcp.git
+python -m pip install git+https://github.com/youncyb/ida-multi-mcp.git
 
 # 2. Install IDA plugin + configure all MCP clients
 ida-multi-mcp --install
@@ -136,7 +136,7 @@ On Windows, IDA typically uses the system Python or its bundled Python. If using
 
 ```bash
 # If IDA uses Python 3.12 but your system default is different:
-py -3.12 -m pip install git+https://github.com/MeroZemory/ida-multi-mcp.git
+py -3.12 -m pip install git+https://github.com/youncyb/ida-multi-mcp.git
 ```
 
 If IDA is installed in a custom location:
@@ -166,7 +166,7 @@ command = "C:\Users\...\python.exe"       # backslashes parsed as escapes
 
 ```bash
 # 1. Install ida-multi-mcp
-pip install --user git+https://github.com/MeroZemory/ida-multi-mcp.git
+pip install --user git+https://github.com/youncyb/ida-multi-mcp.git
 
 # 2. Install IDA plugin + configure all MCP clients
 ida-multi-mcp --install
@@ -322,10 +322,10 @@ This means IDA's Python cannot find the installed package. The most common cause
 2. Install the package using that exact Python version:
    ```bash
    # macOS example (if IDA uses 3.11):
-   python3.11 -m pip install --user git+https://github.com/MeroZemory/ida-multi-mcp.git
+   python3.11 -m pip install --user git+https://github.com/youncyb/ida-multi-mcp.git
 
    # Windows example (if IDA uses 3.12):
-   py -3.12 -m pip install git+https://github.com/MeroZemory/ida-multi-mcp.git
+   py -3.12 -m pip install git+https://github.com/youncyb/ida-multi-mcp.git
    ```
 3. Restart IDA Pro
 

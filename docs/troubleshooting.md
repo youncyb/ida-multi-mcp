@@ -62,13 +62,13 @@ This usually means IDA's Python cannot find the package due to a **Python versio
    **macOS:**
    ```bash
    # Replace 3.11 with IDA's actual Python version
-   python3.11 -m pip install --user git+https://github.com/MeroZemory/ida-multi-mcp.git
+   python3.11 -m pip install --user git+https://github.com/youncyb/ida-multi-mcp.git
    ```
 
    **Windows:**
    ```bash
    # Replace 3.12 with IDA's actual Python version
-   py -3.12 -m pip install git+https://github.com/MeroZemory/ida-multi-mcp.git
+   py -3.12 -m pip install git+https://github.com/youncyb/ida-multi-mcp.git
    ```
 
 3. Ensure the IDA plugins directory contains `ida_multi_mcp.py`:
@@ -92,7 +92,7 @@ The Windows discovery implementation is in [`src/ida_multi_mcp/health.py`](../sr
 If you are on an older install:
 
 ```bash
-pip install -U git+https://github.com/MeroZemory/ida-multi-mcp.git
+pip install -U git+https://github.com/youncyb/ida-multi-mcp.git
 ```
 
 Then restart the MCP client. You do **not** need IDA GUI running for the stdio server to handshake.
