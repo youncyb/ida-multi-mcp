@@ -1,11 +1,13 @@
-# Vendored zeromcp for the router (stdio transport, IDA-free).
+# Vendored zeromcp for the router (stdio + optional Streamable HTTP, IDA-free).
 #
 # A second copy lives at ida_multi_mcp/ida_mcp/zeromcp/mcp.py and is used by the
 # IDA plugin/worker over HTTP. The two are deliberately separate: the router
 # must not import ida_mcp (which pulls in IDA dependencies), and some behavior is
 # transport-specific — this copy logs to stderr (stdout is the stdio protocol
 # channel), whereas the HTTP copy logs to stdout. Keep shared, transport-neutral
-# fixes mirrored across both copies.
+# fixes mirrored across both copies. Host-header policy for the router's opt-in
+# remote HTTP bind is router-only; do not copy it onto the IDA plugin server.
+import ipaddress
 import os
 import re
 import sys
@@ -23,6 +25,34 @@ from urllib.parse import urlparse, parse_qs
 from io import BufferedIOBase
 
 from .jsonrpc import JsonRpcRegistry, JsonRpcError, JsonRpcException, get_current_request_id, register_pending_request, unregister_pending_request, cancel_request
+
+_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1", ""})
+
+
+def _hostname_from_host_header(host_header: str) -> str:
+    """Return the hostname from a Host header, stripping port and IPv6 brackets."""
+    host_header = (host_header or "").strip()
+    if not host_header:
+        return ""
+    if host_header.startswith("["):
+        end = host_header.find("]")
+        if end != -1:
+            return host_header[1:end]
+    # IPv4 or DNS name with optional :port. IPv6 without brackets has >1 colon.
+    if host_header.count(":") == 1:
+        return host_header.split(":", 1)[0]
+    return host_header
+
+
+def _is_ip_literal(hostname: str) -> bool:
+    if not hostname:
+        return False
+    try:
+        ipaddress.ip_address(hostname)
+        return True
+    except ValueError:
+        return False
+
 
 class McpToolError(Exception):
     def __init__(self, message: str):
@@ -132,14 +162,20 @@ class McpHttpRequestHandler(BaseHTTPRequestHandler):
             pass
 
     def _check_host_header(self) -> bool:
-        """Validate Host header to prevent DNS rebinding attacks on all endpoints."""
-        host_header = self.headers.get("Host", "")
-        # Strip port to get hostname
-        hostname = host_header.split(":")[0] if host_header else ""
-        if hostname not in ("127.0.0.1", "localhost", "::1", ""):
-            self.send_error(403, "Forbidden: invalid Host header")
-            return False
-        return True
+        """Validate Host header to prevent DNS rebinding attacks on all endpoints.
+
+        Default allowlist is loopback only. When the router opts into a
+        non-loopback HTTP bind, IP-literal Host values may be accepted so a
+        client on another machine can use http://<ip>:<port>/mcp. DNS names
+        stay rejected unless explicitly listed on ``allowed_hosts``.
+        """
+        hostname = _hostname_from_host_header(self.headers.get("Host", ""))
+        if hostname in self.mcp_server.allowed_hosts:
+            return True
+        if self.mcp_server.allow_ip_literal_hosts and _is_ip_literal(hostname):
+            return True
+        self.send_error(403, "Forbidden: invalid Host header")
+        return False
 
     def _check_content_type_json(self) -> bool:
         """Enforce Content-Type: application/json on MCP endpoints."""
@@ -316,6 +352,8 @@ class McpServer:
         self.version = version
         self.instructions = instructions
         self.cors_allowed_origins: Callable[[str], bool] | list[str] | str | None = self.cors_localhost
+        self.allowed_hosts: set[str] = set(_LOOPBACK_HOSTS)
+        self.allow_ip_literal_hosts = False
         self.post_body_limit = 10 * 1024 * 1024  # 10MB
         self.tools = McpRpcRegistry()
         self.resources = McpRpcRegistry()

@@ -1,6 +1,6 @@
 # ida-multi-mcp Architecture SSOT Index
 
-Last updated: 2026-02-17
+Last updated: 2026-09-12
 Status: Active
 Change class: B (scope/architecture)
 

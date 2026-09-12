@@ -92,7 +92,7 @@ Core instruction, anchor and CFG signals do not use function names, so stripping
 - **Analysis gating** — `analysis_status` / `analysis_wait` tell an agent whether IDA has actually settled, and the router warns on results from analysis-dependent tools while it has not ([why this matters](#the-one-rule-wait-for-auto-analysis))
 - **Deadlines that reach into C** — a slow SDK call used to hold IDA's main thread past the tool timeout. The deadline now fires IDA's own `set_cancelled()`, and partial pages are labelled `cursor.cancelled` ([#28](https://github.com/MeroZemory/ida-multi-mcp/pull/28))
 - **Actionable failure** — binary changes, stale instances and crashes come back as errors an agent can act on, not silence
-- **Localhost only** — loopback-bound with Host/Origin validation; no remote surface
+- **Localhost by default** — IDA plugins stay loopback-bound with Host/Origin validation; the aggregator is stdio unless you opt into HTTP MCP (`--http`) for a remote client
 - **IDA 8.5–9.3** — `compat.py` shims APIs that moved between releases and warns on the builds that shipped without them
 
 </td>
@@ -118,7 +118,7 @@ Both projects now support working on several databases at once — upstream thro
 
 ## Architecture at a glance
 
-One stdio MCP server in front of N IDA processes. The router owns discovery, `instance_id` routing, health and the idalib lifecycle; the IDA tools themselves run inside each instance.
+One MCP server in front of N IDA processes (stdio by default, optional Streamable HTTP). The router owns discovery, `instance_id` routing, health and the idalib lifecycle; the IDA tools themselves run inside each instance.
 
 ```mermaid
 flowchart TD
@@ -129,7 +129,7 @@ flowchart TD
     G2["IDA #2 (GUI)<br/>dropper.dll · px3a"]
     H1["idalib #1 (headless)<br/>payload.bin · 9bf1"]
 
-    C -- "stdio / MCP" --> R
+    C -- "stdio or HTTP /mcp" --> R
     R -- "HTTP JSON-RPC" --> G1
     R -- "HTTP JSON-RPC" --> G2
     R -- "HTTP JSON-RPC" --> H1
@@ -142,8 +142,8 @@ flowchart TD
 <summary>Plain-text version</summary>
 
 ```
-MCP Client (Claude, Cursor, etc.)
-    │  stdio (MCP Protocol)
+MCP Client (Claude, Cursor, OpenCode, etc.)
+    │  stdio (default) or Streamable HTTP POST /mcp
     ▼
 ┌──────────────────────────────────────┐
 │  ida-multi-mcp Server (Router)       │

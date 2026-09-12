@@ -1,5 +1,7 @@
 # Architecture
 
+Last updated: 2026-09-12
+
 [← back to README](../README.md)
 
 ## Architecture
@@ -32,6 +34,8 @@ Each registered instance includes:
 2. Server routes to the target instance via HTTP JSON-RPC
 3. IDA instance processes the request
 4. Result returned to client
+
+Client transport is stdio by default. `ida-multi-mcp --http` serves Streamable HTTP at `POST /mcp` so a client on another machine (OpenCode `type: remote`) can reach the aggregator. IDA instance HTTP remains `127.0.0.1`. Non-loopback HTTP binds accept IP-literal `Host` headers; DNS names need `--allowed-host`. Implementation: `src/ida_multi_mcp/server.py`, Host policy in `src/ida_multi_mcp/vendor/zeromcp/mcp.py`.
 
 ### Health Monitoring
 

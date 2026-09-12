@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Last updated: 2026-09-09
+Last updated: 2026-09-12
 
 [← back to README](../README.md)
 
@@ -14,6 +14,19 @@ Make sure:
 2. Check IDA's plugin list (Edit → Plugins → Scan) to confirm `ida-multi-mcp` plugin loaded
 3. Check IDA console for error messages
 4. Run `ida-multi-mcp --list` again
+
+If OpenCode is on the host and IDA is in a VM, a host-side stdio config (`python -m ida_multi_mcp`) reads the **host** registry, which is empty. Run the aggregator in the VM with `--http` and point OpenCode at `http://<VM-IP>:<port>/mcp`. See [Host OpenCode + IDA in a VM](installation.md#host-opencode--ida-in-a-vm).
+
+</details>
+
+<details>
+<summary>OpenCode remote MCP: 403 invalid Host header, or OAuth prompt</summary>
+
+403: the aggregator default allowlist is loopback. Bind with `--http --host 0.0.0.0` (IP-literal `Host` headers are then accepted) or pass `--allowed-host` for a DNS name.
+
+OAuth: this server has no authorization endpoint. Set `"oauth": false` on the OpenCode remote entry.
+
+GET `/mcp` returning 405 is expected (JSON POST only).
 
 </details>
 

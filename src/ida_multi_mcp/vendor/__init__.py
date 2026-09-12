@@ -4,8 +4,8 @@ This package contains vendored third-party code to minimize external dependencie
 and ensure version compatibility.
 
 Vendored packages:
-- zeromcp 1.3.0: Minimal MCP server implementation with stdio transport
-  Used by the proxy-side MCP server in server.py for stdio communication.
+- zeromcp 1.3.0: Minimal MCP server implementation with stdio and Streamable HTTP
+  Used by the proxy-side MCP server in server.py (stdio by default, HTTP opt-in).
   Source: https://github.com/mrexodia/ida-pro-mcp
 
 Note: The full ida_mcp package has been absorbed into ida_multi_mcp.ida_mcp

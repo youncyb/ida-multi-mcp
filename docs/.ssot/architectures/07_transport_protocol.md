@@ -1,5 +1,7 @@
 # 07. Transport and Protocol Architecture
 
+Last updated: 2026-09-12
+
 ## Governance Alignment
 - Authority order: `docs/.ssot/contracts/*` -> `docs/.ssot/PRD.md` -> `docs/.ssot/decisions/*` -> this document.
 - Contract reference baseline: `docs/.ssot/contracts/INDEX.md` (v1 baseline).
@@ -7,8 +9,10 @@
 
 
 ## Transport Layers
-- Client <-> Aggregator: MCP stdio
-- Aggregator <-> IDA instance: HTTP JSON-RPC (`POST /mcp`)
+- Client <-> Aggregator: MCP stdio (default) or opt-in Streamable HTTP (`POST /mcp` via `--http`)
+- Aggregator <-> IDA instance: HTTP JSON-RPC (`POST /mcp`) on loopback
+
+Opt-in HTTP is implemented by `src/ida_multi_mcp/server.py` using `src/ida_multi_mcp/vendor/zeromcp/mcp.py`. IDA plugin HTTP (`src/ida_multi_mcp/ida_mcp/zeromcp/mcp.py`) stays loopback-only.
 
 ## Protocol Calls
 Central-server-side core methods:

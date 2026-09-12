@@ -2,7 +2,7 @@
 
 This guide is for AI agents. Follow each step exactly.
 
-Last updated: 2026-07-30
+Last updated: 2026-09-12
 Governance reference: `docs/README.md`
 Authority note: this document is operational guidance and must not redefine contracts.
 
@@ -181,6 +181,47 @@ For clients not auto-detected or to view the configuration JSON, run:
 ```bash
 ida-multi-mcp --config
 ```
+
+## Host OpenCode + IDA in a VM
+
+`--install` writes a **stdio** client config that starts `python -m ida_multi_mcp` on the same machine. That process reads **local** `~/.ida-mcp/instances.json`. If OpenCode runs on the host and IDA runs in a VM, a host-side stdio server sees an empty registry.
+
+Keep the plugin and aggregator in the VM. Expose only the aggregator over Streamable HTTP; IDA instance HTTP stays on `127.0.0.1`.
+
+**On the VM** (after plugin install):
+
+```bash
+ida-multi-mcp --http --host 0.0.0.0 --port 8745
+```
+
+Allow inbound TCP 8745 on the VM firewall if needed. Use a host-only or LAN adapter, not a public bind.
+
+**On the host**, OpenCode V2 (`opencode.json` / `opencode.jsonc`):
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "ida-multi-mcp": {
+        "type": "remote",
+        "url": "http://<VM-IP>:8745/mcp",
+        "oauth": false
+      }
+    }
+  }
+}
+```
+
+`oauth` must be `false`. Print a filled-in snippet from the VM:
+
+```bash
+ida-multi-mcp --config --http --host <VM-IP> --port 8745
+```
+
+Older OpenCode configs that nest servers directly under `mcp` (no `servers` key) use the same `type` / `url` / `oauth` object.
+
+Verify from the host: `ida-multi-mcp --list` inside the VM shows instances; in OpenCode call `list_instances()`.
 
 ## Verify
 

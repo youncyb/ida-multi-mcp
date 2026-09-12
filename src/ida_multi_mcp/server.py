@@ -994,8 +994,14 @@ class IdaMultiMcpServer:
             if conn is not None:
                 conn.close()  # always release the socket, even on error
 
-    def run(self):
-        """Run the MCP server with stdio transport."""
+    def run(
+        self,
+        *,
+        http_host: str | None = None,
+        http_port: int | None = None,
+        allowed_hosts: list[str] | None = None,
+    ):
+        """Run the MCP server (stdio by default, Streamable HTTP when http_host is set)."""
         # Clean up dead instances on startup
         removed = cleanup_stale_instances(self.registry)
         if removed:
@@ -1017,16 +1023,115 @@ class IdaMultiMcpServer:
         print(f"[ida-multi-mcp] Server starting with {len(self._tool_cache)} tools",
               file=sys.stderr)
 
+        if http_host is not None:
+            port = HTTP_DEFAULT_PORT if http_port is None else http_port
+            configure_http_host_policy(self.server, http_host, allowed_hosts)
+            if http_host not in _LOOPBACK_BINDS:
+                print(
+                    "[ida-multi-mcp] Warning: HTTP MCP is bound on a non-loopback "
+                    "address. IDA plugins remain on 127.0.0.1; this process exposes "
+                    "the aggregator. Restrict with a host-only/LAN network and a "
+                    "host firewall.",
+                    file=sys.stderr,
+                )
+            url = advertised_http_url(http_host, port)
+            print(
+                f"[ida-multi-mcp] OpenCode remote: "
+                f'type=remote url={url} oauth=false',
+                file=sys.stderr,
+            )
+            # Bind on this thread, serve in a background thread so Ctrl+C can
+            # call stop() from the main thread (HTTPServer.shutdown requirement).
+            self.server.serve(http_host, port, background=True)
+            try:
+                while self.server._running:
+                    time.sleep(0.5)
+            except KeyboardInterrupt:
+                print("[ida-multi-mcp] Shutting down HTTP MCP", file=sys.stderr)
+                self.server.stop()
+            return
+
         # Run server with stdio transport (idalib cleanup via atexit in IdalibManager)
         self.server.stdio()
 
 
-def serve(registry_path: str | None = None, idalib_python: str | None = None):
+HTTP_DEFAULT_HOST = "127.0.0.1"
+HTTP_DEFAULT_PORT = 8745
+_LOOPBACK_BINDS = frozenset({"127.0.0.1", "localhost", "::1"})
+_WILDCARD_BINDS = frozenset({"0.0.0.0", "::", ""})
+
+
+def configure_http_host_policy(
+    mcp: McpServer,
+    bind_host: str,
+    extra_hosts: list[str] | None = None,
+) -> None:
+    """Apply Host-header policy for an opt-in aggregator HTTP bind.
+
+    Loopback binds keep the default loopback-only allowlist. Non-loopback
+    binds accept IP-literal Host headers (so http://<vm-ip>:<port>/mcp works)
+    and any extra DNS names from ``--allowed-host``. The IDA plugin HTTP
+    server is not configured here and stays loopback-only.
+    """
+    if extra_hosts:
+        for host in extra_hosts:
+            name = (host or "").strip()
+            if name:
+                mcp.allowed_hosts.add(name)
+    if bind_host not in _LOOPBACK_BINDS:
+        mcp.allow_ip_literal_hosts = True
+        if bind_host not in _WILDCARD_BINDS:
+            mcp.allowed_hosts.add(bind_host)
+
+
+def advertised_http_url(bind_host: str, port: int) -> str:
+    """URL a remote MCP client should use for this HTTP bind."""
+    host = bind_host
+    if bind_host in _WILDCARD_BINDS:
+        host = _guess_lan_ipv4() or "127.0.0.1"
+    if ":" in host and not host.startswith("["):
+        host = f"[{host}]"
+    return f"http://{host}:{port}/mcp"
+
+
+def _guess_lan_ipv4() -> str | None:
+    """Best-effort non-loopback IPv4 for log / --config hints. None if unknown."""
+    import socket
+
+    try:
+        probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            probe.connect(("8.8.8.8", 80))
+            ip = probe.getsockname()[0]
+        finally:
+            probe.close()
+    except OSError:
+        return None
+    if not ip or ip.startswith("127."):
+        return None
+    return ip
+
+
+def serve(
+    registry_path: str | None = None,
+    idalib_python: str | None = None,
+    *,
+    http_host: str | None = None,
+    http_port: int | None = None,
+    allowed_hosts: list[str] | None = None,
+):
     """Start the ida-multi-mcp server.
 
     Args:
         registry_path: Optional custom registry path
         idalib_python: Python executable with idapro installed (for headless)
+        http_host: If set, serve Streamable HTTP on this address instead of stdio
+        http_port: HTTP port (default: 8745)
+        allowed_hosts: Extra Host header values (DNS names) to accept
     """
     server = IdaMultiMcpServer(registry_path, idalib_python=idalib_python)
-    server.run()
+    server.run(
+        http_host=http_host,
+        http_port=http_port,
+        allowed_hosts=allowed_hosts,
+    )

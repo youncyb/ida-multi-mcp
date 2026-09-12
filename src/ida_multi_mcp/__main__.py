@@ -14,7 +14,12 @@ import time
 from pathlib import Path
 import shutil
 
-from .server import serve
+from .server import (
+    HTTP_DEFAULT_HOST,
+    HTTP_DEFAULT_PORT,
+    advertised_http_url,
+    serve,
+)
 from .registry import InstanceRegistry
 
 SERVER_NAME = "ida-multi-mcp"
@@ -215,8 +220,15 @@ def copy_python_env(env):
     return result
 
 
-def generate_mcp_config(*, include_type: bool = False):
+def generate_mcp_config(*, include_type: bool = False, remote_url: str | None = None):
     """Generate MCP server configuration for ida-multi-mcp."""
+    if remote_url:
+        return {
+            "type": "remote",
+            "url": remote_url,
+            "oauth": False,
+        }
+
     mcp_config = {
         "command": get_python_executable(),
         "args": ["-m", "ida_multi_mcp"],
@@ -232,8 +244,23 @@ def generate_mcp_config(*, include_type: bool = False):
     return mcp_config
 
 
-def print_mcp_config():
+def print_mcp_config(*, remote_url: str | None = None):
     """Print MCP client configuration JSON."""
+    if remote_url:
+        # OpenCode V2 remote shape. stdio --config keeps the generic mcpServers form.
+        print(
+            json.dumps(
+                {
+                    "mcp": {
+                        "servers": {
+                            SERVER_NAME: generate_mcp_config(remote_url=remote_url)
+                        }
+                    }
+                },
+                indent=2,
+            )
+        )
+        return
     print(
         json.dumps(
             {"mcpServers": {SERVER_NAME: generate_mcp_config()}}, indent=2
@@ -1159,6 +1186,18 @@ def cmd_uninstall(args):
 
 def cmd_config(args):
     """Print MCP client configuration JSON."""
+    if getattr(args, "http", False):
+        host = args.host or HTTP_DEFAULT_HOST
+        port = HTTP_DEFAULT_PORT if args.port is None else args.port
+        url = advertised_http_url(host, port)
+        if host in ("0.0.0.0", "::", ""):
+            print(
+                "Wildcard bind: replace the host in url with this machine's "
+                "address as seen from the MCP client if the guessed IP is wrong.",
+                file=sys.stderr,
+            )
+        print_mcp_config(remote_url=url)
+        return 0
     print_mcp_config()
     return 0
 
@@ -1233,8 +1272,8 @@ def cmd_verify(args):
     return 1
 
 
-def main():
-    """Main CLI entry point."""
+def build_parser() -> argparse.ArgumentParser:
+    """Build the CLI parser (extracted for tests)."""
     parser = argparse.ArgumentParser(
         description="ida-multi-mcp: Multi-instance MCP server for IDA Pro"
     )
@@ -1271,8 +1310,34 @@ def main():
         help="Python executable with idapro installed (for headless idalib sessions). "
              "Defaults to the same Python running this server."
     )
+    parser.add_argument(
+        "--http", action="store_true",
+        help="Serve MCP over Streamable HTTP (POST /mcp) instead of stdio"
+    )
+    parser.add_argument(
+        "--host", type=str, default=None,
+        help=f"HTTP bind address with --http (default: {HTTP_DEFAULT_HOST}; "
+             "use 0.0.0.0 to accept LAN/VM-host clients)"
+    )
+    parser.add_argument(
+        "--port", type=int, default=None,
+        help=f"HTTP port with --http (default: {HTTP_DEFAULT_PORT})"
+    )
+    parser.add_argument(
+        "--allowed-host", action="append", default=None, dest="allowed_host",
+        help="Extra Host header value to accept with --http (repeatable; for DNS names)"
+    )
+    return parser
 
+
+def main():
+    """Main CLI entry point."""
+    parser = build_parser()
     args = parser.parse_args()
+
+    http_flags = args.host is not None or args.port is not None or args.allowed_host
+    if http_flags and not args.http:
+        parser.error("--host/--port/--allowed-host require --http")
 
     if args.install:
         sys.exit(cmd_install(args))
@@ -1287,7 +1352,16 @@ def main():
         sys.exit(cmd_config(args))
     else:
         # Default: start MCP server
-        serve(registry_path=args.registry, idalib_python=args.idalib_python)
+        if args.http:
+            serve(
+                registry_path=args.registry,
+                idalib_python=args.idalib_python,
+                http_host=args.host or HTTP_DEFAULT_HOST,
+                http_port=HTTP_DEFAULT_PORT if args.port is None else args.port,
+                allowed_hosts=args.allowed_host,
+            )
+        else:
+            serve(registry_path=args.registry, idalib_python=args.idalib_python)
 
 
 if __name__ == "__main__":

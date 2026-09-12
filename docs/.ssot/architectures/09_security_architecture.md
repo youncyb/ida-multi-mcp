@@ -1,5 +1,7 @@
 # 09. Security Architecture
 
+Last updated: 2026-09-12
+
 ## Governance Alignment
 - Authority order: `docs/.ssot/contracts/*` -> `docs/.ssot/PRD.md` -> `docs/.ssot/decisions/*` -> this document.
 - Contract reference baseline: `docs/.ssot/contracts/INDEX.md` (v1 baseline).
@@ -9,6 +11,7 @@
 ## Trust Boundaries
 - Default communication is localhost (127.0.0.1)
 - Enforcing explicit `instance_id` at the central server mitigates misrouting/confusion
+- Aggregator `--http` on a non-loopback bind is an explicit remote surface. IDA plugins remain loopback-only. Host-header policy: loopback names always; IP literals only when the bind is non-loopback; DNS names only via `--allowed-host`. This is DNS-rebinding defence, not authentication.
 
 ## IDA HTTP Protections
 - `/config` POST: Origin validation

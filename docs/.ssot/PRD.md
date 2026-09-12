@@ -1,6 +1,6 @@
 # Product Requirements Document (PRD)
 
-Last updated: 2026-02-17
+Last updated: 2026-09-12
 Status: Active
 Change class: B (scope/architecture)
 
@@ -12,6 +12,7 @@ Change class: B (scope/architecture)
 - Multi-instance operation: supports concurrent analysis of multiple binaries.
 - Tool surface stability: maintains tool visibility via static + dynamic schema federation.
 - Install/operational practicality: supports cross-platform plugin installation and MCP client configuration automation.
+- Optional Streamable HTTP transport so a remote MCP client (e.g. OpenCode `type: remote`) can reach a VM-local aggregator without reading the host registry.
 
 ## 3. In Scope
 - Registry-based instance lifecycle management

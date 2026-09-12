@@ -1,5 +1,7 @@
 # 01. System Context Architecture
 
+Last updated: 2026-09-12
+
 ## Governance Alignment
 - Authority order: `docs/.ssot/contracts/*` -> `docs/.ssot/PRD.md` -> `docs/.ssot/decisions/*` -> this document.
 - Contract reference baseline: `docs/.ssot/contracts/INDEX.md` (v1 baseline).
@@ -23,7 +25,7 @@
 ## Context Flow
 1. The IDA plugin starts an HTTP MCP server on a dynamic port (0).
 2. The plugin registers the instance with the central registry.
-3. The MCP client connects to the central server over stdio.
+3. The MCP client connects to the central server over stdio (default) or opt-in Streamable HTTP (`POST /mcp`).
 4. The central server routes requests to the corresponding IDA based on `instance_id`.
 
 ## Core Non-functional Goals

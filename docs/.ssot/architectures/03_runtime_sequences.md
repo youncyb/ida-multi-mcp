@@ -1,5 +1,7 @@
 # 03. Runtime Sequences
 
+Last updated: 2026-09-12
+
 ## Governance Alignment
 - Authority order: `docs/.ssot/contracts/*` -> `docs/.ssot/PRD.md` -> `docs/.ssot/decisions/*` -> this document.
 - Contract reference baseline: `docs/.ssot/contracts/INDEX.md` (v1 baseline).
@@ -10,7 +12,7 @@
 1. Operator runs `ida-multi-mcp`.
 2. `server.run()` performs stale-process cleanup and auto-rediscovery.
 3. `_refresh_tools()` prepares management + static tool schemas.
-4. The stdio MCP server begins waiting for requests.
+4. The MCP server begins waiting for requests (stdio, or Streamable HTTP when `--http` is set).
 
 ## B. IDA Instance Start Sequence
 1. On IDA load, the PLUGIN_FIX plugin auto-loads.
